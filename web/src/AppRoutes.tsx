@@ -1,10 +1,10 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
-import Dashboard from "./components/pages/Dashboard";
-import PaginaBase from "./components/pages/PaginaBase";
-import PaginaInicial from "./components/pages/PaginaInicial";
-import PaginaBaseFormulario from "./components/pages/PaginaBaseFromulario";
-import Login from "./components/pages/Login";
-import Cadastro from "./components/pages/Cadastro";
+import Dashboard from "./pages/Dashboard";
+import PaginaBase from "./pages/PaginaBase";
+import PaginaInicial from "./pages/PaginaInicial";
+import PaginaBaseFormulario from "./pages/PaginaBaseFromulario";
+import Login from "./pages/Login";
+import Cadastro from "./pages/Cadastro";
 
 function AppRoutes() {
   return (

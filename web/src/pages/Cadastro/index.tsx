@@ -1,9 +1,12 @@
 import styled from "styled-components";
 import logo from "./logo.png";
-import CampoDigitacao from "../../CampoDigitacao";
+import CampoDigitacao from "../../components/CampoDigitacao";
 import { useState } from "react";
-import Botao from "../../Botao";
+import Botao from "../../components/Botao";
 import { Step, StepLabel, Stepper } from "@mui/material";
+import IClinica from "../../types/IClinica";
+import usePost from "../../usePost";
+import { useNavigate } from "react-router-dom";
 
 const Formulario = styled.form`
   width: 70%;
@@ -53,12 +56,39 @@ export default function Cadastro() {
   const [numero, setNumero] = useState("");
   const [complemento, setComplemento] = useState("");
   const [estado, setEstado] = useState("");
+  const {cadastrarDados, erro, sucesso} = usePost();
+  const navigate =  useNavigate();
 
   const lidaSubmit = (event: React.FocusEvent<HTMLFormElement>) => {
     event.preventDefault();
+    
+    const clinica: IClinica = {
+      email: email,
+      nome: nome,
+      senha: senha,
+      endereco: {
+        cep: cep,
+        rua: rua,
+        numero: numero,
+        complemento: complemento,
+        estado: estado
+      }
+    }
+
+    if(etapaAtiva !== 0) {
+      try{
+        cadastrarDados({ url: 'clinica', dados: clinica})
+        navigate('/login')
+        console.log(erro, sucesso, clinica);
+        
+      }catch(erro){
+        erro && alert("Erro ao cadastrar os dados")
+      }
+    }
     setEtapaAtiva(etapaAtiva + 1);
-    console.log("çldjçs");
   };
+
+
   return (
     <>
       <Imagem src={logo} alt="Logo da Voll" />
@@ -78,9 +108,9 @@ export default function Cadastro() {
           />
         </Step>
       </Stepper>
-      <Titulo>Primeiro, alguns dados básicos</Titulo>
       {etapaAtiva === 0 ? (
         <>
+        <Titulo>Primeiro, alguns dados básicos</Titulo>
           <Formulario onSubmit={lidaSubmit}>
             <CampoDigitacao
               tipo="text"
@@ -122,6 +152,7 @@ export default function Cadastro() {
         </>
       ) : (
         <>
+        <Titulo>Agora, os dados técnicos</Titulo>
           <Formulario onSubmit={lidaSubmit}>
             <CampoDigitacao
               tipo="tel"

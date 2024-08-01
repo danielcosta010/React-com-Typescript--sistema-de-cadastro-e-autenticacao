@@ -1,9 +1,10 @@
 import { useState } from "react";
-import CampoDigitacao from "../../CampoDigitacao";
-import Botao from "../../Botao";
+import CampoDigitacao from "../../components/CampoDigitacao";
+import Botao from "../../components/Botao";
 import logo from "./logo.png";
 import styled from "styled-components";
 import { Link } from "react-router-dom";
+import usePost from "../../usePost";
 
 const Formulario = styled.form`
   width: 70%;
@@ -38,14 +39,37 @@ const LinkCustomizado = styled(Link)`
   text-decoration: none;
 `;
 
+interface ILogin {
+  email: string;
+  senha: string;
+}
+
 export default function Login() {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
+  const {cadastrarDados, erro, sucesso} = usePost();
+
+  const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const usuario: ILogin = {
+      email: email,
+      senha: senha,
+    }
+
+    try{
+      cadastrarDados({ url: "auth/login", dados: usuario})
+      console.log(erro, sucesso, usuario);
+      
+    }catch(erro) {
+      erro && alert("Não foi possível realizar o login")
+    }
+
+  }
   return (
     <>
       <Imagem src={logo} alt="Logo da Voll" />
       <Titulo>Faça login em sua conta</Titulo>
-      <Formulario>
+      <Formulario onSubmit={handleLogin}>
         <CampoDigitacao
           valor={email}
           tipo="email"
