@@ -22,3 +22,5 @@ export default function PaginaInicial() {
         </>
     )
 }
+
+// https://www.figma.com/design/61CRNXlUmooMttGVa0GvML/React-fullstack---Voll.med?node-id=410-6247&t=jU7bKZPTdhVk5nXM-0
