@@ -6,12 +6,17 @@ import {
   Modal,
   Switch,
 } from "@mui/material";
+
 import Titulo from "../../../components/Titulo";
 import styled from "styled-components";
 import CampoDigitacao from "../../../components/CampoDigitacao";
 import { useState } from "react";
 import iconeCep from "./iconeCep.png";
 import Botao from "../../../components/Botao";
+import Subtitulo from "../../../components/Subtitulo";
+import IProfissional from "../../../types/IProfissional";
+import usePost from "../../../usePost";
+import autenticaStore from "../../../stores/autentica.store";
 
 const BoxCustomizado = styled(Box)`
   position: fixed;
@@ -47,8 +52,8 @@ const SpanCustomizado = styled.span`
   z-index: 2px
 `;
 
-const TituloH3 = styled.h3`
-  color: var(--azul-escuro);
+const TextoSwich = styled.p`
+  color: var(--cinza);
 `;
 
 const ContainerPlanos = styled.div`
@@ -56,15 +61,24 @@ const ContainerPlanos = styled.div`
   flex-direction: column;
   align-items: center;
 `;
-const SwitchToogle = styled(Switch)`
-  width: 500px;
-`;
+
 const BotaoCustomizado = styled(Botao)`
   width: 50%;
   margin-left: 50%;
-  margin-top: 4em;
+  margin-top: 2em;
   transform: translate(-50%, -50%);
 `;
+
+// const CustomSwitch = styled(Switch)(
+//   ({ theme }) => `
+
+//   width: 200px;
+// & .${switchClasses.root} {
+
+// }
+// `
+// );
+
 export default function ModalCadastro({
   open,
   handleClose,
@@ -85,14 +99,58 @@ export default function ModalCadastro({
   const [numero, setNumero] = useState("");
   const [complemento, setComplemento] = useState("");
   const [estado, setEstado] = useState("");
+  const label = { inputProps: { "aria-label": "Atende por plano?" } };
+
+  const [possuiPlano, setPossuiPlano] = useState(false);
+  const [planosSelecionados, setPlanosSelecionados] = useState<string[]>([]);
+  const { cadastrarDados } = usePost();
+  const { usuario } = autenticaStore;
+
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const checkboxValue = event.target.value;
+    if (event.target.checked) {
+        setPlanosSelecionados([...planosSelecionados, checkboxValue]);
+    } else {
+        setPlanosSelecionados(planosSelecionados.filter(plano => plano !== checkboxValue));
+    }
+};
 
   // Estado para o switch
-  const [planoEstaAtivado, setIsPlanoAtivado] = useState(false);
+  const [planoEstaAtivado, setEstaAtivado] = useState(false);
 
-  const handleToggleSwitch = () => {
-    setIsPlanoAtivado(!planoEstaAtivado);
+  const handleToggleSwitch = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const checkboxValue = event.target.value;
+    if (event.target.checked) {
+        setPlanosSelecionados([...planosSelecionados, checkboxValue]);
+    } else {
+        setPlanosSelecionados(planosSelecionados.filter(plano => plano !== checkboxValue));
+    }
+    setEstaAtivado(!planoEstaAtivado);
   };
 
+  const handleSubmit = async(event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const profissional: IProfissional = {
+      nome: nome,
+      crm: crm,
+      especialidade: especialidade,
+      possuiPlanoSaude: possuiPlano,
+      estaAtivo: true,
+      imagem: urlImagem,
+      senha: senha,
+      planoSaude: planosSelecionados,
+      email: email,
+      telefone: telefone,
+      endereco: {
+        cep: cep,
+        rua: rua,
+        numero: numero,
+        complemento: complemento,
+        estado: estado
+      }
+    }
+    await cadastrarDados({ url: "especialista", dados: profissional, token: usuario.token})
+  }
   return (
     <Modal
       open={open}
@@ -102,147 +160,189 @@ export default function ModalCadastro({
     >
       <BoxCustomizado>
         <Titulo>Cadastre o especialista inserindo os dados abaixo</Titulo>
-
-        <CampoDigitacao
-          tipo="text"
-          valor={nome}
-          placeholder="Digite seu nome"
-          onChange={setNome}
-          label="Nome"
-        />
-        <CampoDigitacao
-          tipo="email"
-          valor={email}
-          placeholder="Digite seu e-mail"
-          onChange={setEmail}
-          label="Email"
-        />
-        <CampoDigitacao
-          tipo="password"
-          valor={senha}
-          placeholder="Digite sua senha"
-          onChange={setSenha}
-          label="Senha"
-        />
-        <CampoDigitacao
-          tipo="password"
-          valor={confirmarSenha}
-          placeholder="Repita a senha anterior"
-          onChange={setConfirmarSenha}
-          label="Repita a senha"
-        />
-        <CampoDigitacao
-          tipo="text"
-          valor={especialidade}
-          placeholder="Digite a especialidade"
-          onChange={setEspecialidade}
-          label="Especialidade"
-        />
-        <CampoDigitacao
-          tipo="text"
-          valor={crm}
-          placeholder="Insira seu número de registro"
-          onChange={setCrm}
-          label="CRM"
-        />
-        <CampoDigitacao
-          tipo="number"
-          valor={telefone}
-          placeholder="(DDD) XXXX-XXXX"
-          onChange={setTelefone}
-          label="Telefone"
-        />
-        <CampoDigitacao
-          tipo="text"
-          valor={urlImagem}
-          placeholder="http://img/exemplo.png"
-          onChange={setUrlImagem}
-          label="Insira a URL da imagem"
-        />
-        <ContainerCep>
-          <SpanCustomizado />
-          <CampoDigitacao
-            tipo="number"
-            valor={cep}
-            placeholder="Insira o Cep"
-            onChange={setCep}
-            label="Endereco"
-          />
-        </ContainerCep>
-        <ContainerEndereco>
+        <form onSubmit={handleSubmit}>
           <CampoDigitacao
             tipo="text"
-            valor={rua}
-            placeholder="Rua"
-            onChange={setRua}
+            valor={nome}
+            placeholder="Digite seu nome"
+            onChange={setNome}
+            label="Nome"
+          />
+          <CampoDigitacao
+            tipo="email"
+            valor={email}
+            placeholder="Digite seu e-mail"
+            onChange={setEmail}
+            label="Email"
+          />
+          <CampoDigitacao
+            tipo="password"
+            valor={senha}
+            placeholder="Digite sua senha"
+            onChange={setSenha}
+            label="Senha"
+          />
+          <CampoDigitacao
+            tipo="password"
+            valor={confirmarSenha}
+            placeholder="Repita a senha anterior"
+            onChange={setConfirmarSenha}
+            label="Repita a senha"
+          />
+          <CampoDigitacao
+            tipo="text"
+            valor={especialidade}
+            placeholder="Digite a especialidade"
+            onChange={setEspecialidade}
+            label="Especialidade"
+          />
+          <CampoDigitacao
+            tipo="text"
+            valor={crm}
+            placeholder="Insira seu número de registro"
+            onChange={setCrm}
+            label="CRM"
           />
           <CampoDigitacao
             tipo="number"
-            valor={numero}
-            placeholder="Numero"
-            onChange={setNumero}
+            valor={telefone}
+            placeholder="(DDD) XXXX-XXXX"
+            onChange={setTelefone}
+            label="Telefone"
           />
           <CampoDigitacao
             tipo="text"
-            valor={complemento}
-            placeholder="Complemento"
-            onChange={setComplemento}
+            valor={urlImagem}
+            placeholder="http://img/exemplo.png"
+            onChange={setUrlImagem}
+            label="Insira a URL da imagem"
           />
-          <CampoDigitacao
-            tipo="text"
-            valor={estado}
-            placeholder="Estado"
-            onChange={setEstado}
-          />
-        </ContainerEndereco>
+          <ContainerCep>
+            <SpanCustomizado />
+            <CampoDigitacao
+              tipo="number"
+              valor={cep}
+              placeholder="Insira o Cep"
+              onChange={setCep}
+              label="Endereco"
+            />
+          </ContainerCep>
+          <ContainerEndereco>
+            <CampoDigitacao
+              tipo="text"
+              valor={rua}
+              placeholder="Rua"
+              onChange={setRua}
+            />
+            <CampoDigitacao
+              tipo="number"
+              valor={numero}
+              placeholder="Numero"
+              onChange={setNumero}
+            />
+            <CampoDigitacao
+              tipo="text"
+              valor={complemento}
+              placeholder="Complemento"
+              onChange={setComplemento}
+            />
+            <CampoDigitacao
+              tipo="text"
+              valor={estado}
+              placeholder="Estado"
+              onChange={setEstado}
+            />
+          </ContainerEndereco>
 
-        <ContainerPlanos>
-          <TituloH3>Atende por Plano?</TituloH3>
-          <SwitchToogle
-            checked={planoEstaAtivado}
-            onChange={handleToggleSwitch}
-          />
-          <p>Não/Sim</p>
-        </ContainerPlanos>
-        <TituloH3>Selecione os Planos:</TituloH3>
-        <FormGroup>
-          <FormControlLabel
-            control={<Checkbox disabled={!planoEstaAtivado} />}
-            label="Sulamerica"
-            sx={{ "& .MuiSvgIcon-root": { fontSize: 30 } }}
-          />
-          <FormControlLabel
-            control={<Checkbox disabled={!planoEstaAtivado} />}
-            label="Unimed"
-            sx={{ "& .MuiSvgIcon-root": { fontSize: 30 } }}
-          />
-          <FormControlLabel
-            control={<Checkbox disabled={!planoEstaAtivado} />}
-            label="Bradesco"
-            sx={{ "& .MuiSvgIcon-root": { fontSize: 30 } }}
-          />
-          <FormControlLabel
-            control={<Checkbox disabled={!planoEstaAtivado} />}
-            label="Amil"
-            sx={{ "& .MuiSvgIcon-root": { fontSize: 30 } }}
-          />
-          <FormControlLabel
-            control={<Checkbox disabled={!planoEstaAtivado} />}
-            label="Biosaúde"
-            sx={{ "& .MuiSvgIcon-root": { fontSize: 30 } }}
-          />
-          <FormControlLabel
-            control={<Checkbox disabled={!planoEstaAtivado} />}
-            label="Biovida"
-            sx={{ "& .MuiSvgIcon-root": { fontSize: 30 } }}
-          />
-          <FormControlLabel
-            control={<Checkbox disabled={!planoEstaAtivado} />}
-            label="Outro"
-            sx={{ "& .MuiSvgIcon-root": { fontSize: 30 } }}
-          />
-        </FormGroup>
-        <BotaoCustomizado >Cadastrar</BotaoCustomizado>
+          <ContainerPlanos>
+            <Subtitulo>Atende por Plano?</Subtitulo>
+            <Switch
+              {...label}
+              checked={planoEstaAtivado}
+              onChange={handleToggleSwitch}
+              sx={{
+                width: 60, // Ajuste o valor conforme necessário
+                height: 31, // Ajuste a altura se necessário
+                padding: 0,
+                "& .MuiSwitch-switchBase": {
+                  padding: 2,
+                  top: -12,
+                  left: -12,
+                  color: "grey.300",
+                  "&.Mui-checked": {
+                    transform: "translateX(28px)", // Ajuste conforme a largura
+                    color: "light-blue",
+                    "& + .MuiSwitch-track": {
+                      opacity: 1,
+                      backgroundColor: "#99b7e3",
+                    },
+                    "& .MuiSwitch-thumb": {
+                      color: "#2a4571",
+                    },
+                  },
+                },
+                "& .MuiSwitch-thumb": {
+                  width: 23,
+                  height: 23,
+                },
+                "& .MuiSwitch-track": {
+                  borderRadius: 17,
+                  backgroundColor: "grey.400",
+                  opacity: 1,
+                  transition: "background-color 0.2s",
+                },
+              }}
+            />
+            <TextoSwich>Não/Sim</TextoSwich>
+          </ContainerPlanos>
+          <Subtitulo>Selecione os Planos:</Subtitulo>
+          <FormGroup>
+            <FormControlLabel
+              control={
+                <Checkbox disabled={!planoEstaAtivado} onChange={handleChange} value="Saulamerica" />
+              }
+              label="Sulamerica"
+              sx={{ "& .MuiSvgIcon-root": { fontSize: 30 } }}
+            />
+            <FormControlLabel
+              control={<Checkbox disabled={!planoEstaAtivado} value="Unimed" />}
+              label="Unimed"
+              sx={{ "& .MuiSvgIcon-root": { fontSize: 30 } }}
+            />
+            <FormControlLabel
+              control={
+                <Checkbox disabled={!planoEstaAtivado} value="Bradesco" />
+              }
+              label="Bradesco"
+              sx={{ "& .MuiSvgIcon-root": { fontSize: 30 } }}
+            />
+            <FormControlLabel
+              control={<Checkbox disabled={!planoEstaAtivado} value="Amil" />}
+              label="Amil"
+              sx={{ "& .MuiSvgIcon-root": { fontSize: 30 } }}
+            />
+            <FormControlLabel
+              control={
+                <Checkbox disabled={!planoEstaAtivado} value="Biosaúde" />
+              }
+              label="Biosaúde"
+              sx={{ "& .MuiSvgIcon-root": { fontSize: 30 } }}
+            />
+            <FormControlLabel
+              control={
+                <Checkbox disabled={!planoEstaAtivado} value="Biovida" />
+              }
+              label="Biovida"
+              sx={{ "& .MuiSvgIcon-root": { fontSize: 30 } }}
+            />
+            <FormControlLabel
+              control={<Checkbox disabled={!planoEstaAtivado} value="Outro" />}
+              label="Outro"
+              sx={{ "& .MuiSvgIcon-root": { fontSize: 30 } }}
+            />
+          </FormGroup>
+          <BotaoCustomizado>Cadastrar</BotaoCustomizado>
+        </form>
       </BoxCustomizado>
     </Modal>
   );
