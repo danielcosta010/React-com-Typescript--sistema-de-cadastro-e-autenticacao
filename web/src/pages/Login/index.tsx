@@ -3,8 +3,9 @@ import CampoDigitacao from "../../components/CampoDigitacao";
 import Botao from "../../components/Botao";
 import logo from "./logo.png";
 import styled from "styled-components";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import usePost from "../../usePost";
+import autenticaStore from "../../stores/autentica.store";
 
 const Formulario = styled.form`
   width: 70%;
@@ -47,7 +48,8 @@ interface ILogin {
 export default function Login() {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
-  const {cadastrarDados, erro, sucesso} = usePost();
+  const {cadastrarDados, erro, sucesso, resposta} = usePost();
+  const navigate = useNavigate()
 
   const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -57,7 +59,9 @@ export default function Login() {
     }
 
     try{
-      cadastrarDados({ url: "auth/login", dados: usuario})
+      cadastrarDados({ url: "auth/login", dados: usuario});
+      autenticaStore.login({ email: email, token: resposta });
+      navigate('/dashboard')
       console.log(erro, sucesso, usuario);
       
     }catch(erro) {
