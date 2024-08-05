@@ -26,6 +26,6 @@ export default function useFetch<T>({ url }: { url: string }) {
         ).then(dados => setDados(dados)).catch((erro => setErro(erro)))
     }, [url])
 
-    return { dados, erro }
+    return { dados, erro, url }
 
 }

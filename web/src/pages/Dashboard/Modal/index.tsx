@@ -144,9 +144,9 @@ export default function ModalCadastro({
       endereco: {
         cep: cep,
         rua: rua,
+        estado: estado,
         numero: numero,
-        complemento: complemento,
-        estado: estado
+        complemento: complemento
       }
     }
     await cadastrarDados({ url: "especialista", dados: profissional, token: usuario.token})
